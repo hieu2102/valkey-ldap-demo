@@ -19,10 +19,6 @@ LDAP base DN:
 dc=valkey,dc=io
 ```
 
-## Prerequisites
-
-- Docker and Docker Compose
-
 ## Step 1: Start the demo environment
 
 Start the containers:
