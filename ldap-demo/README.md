@@ -30,24 +30,24 @@ docker compose up -d
 This starts:
 
 - 02 OpenLDAP containers with users and OUs defined in [users.ldif](./ldap/users.ldif)
-- 01 Valkey bundle container running officially supported modules (JSON, Search, Bloom, and LDAP)
+- 01 Valkey Bundle container running officially supported modules (JSON, Search, Bloom, and LDAP)
 
 ## Step 2: Create Valkey users
 
-Open a `valkey-cli` session in the `v1` container, starting in RESP 3 mode (using `-3` flag) so that the commands output are more visually identifiable.
+Open a `valkey-cli` session in the `v1` container, starting in RESP 3 mode (using `-3` flag) so that the commands output are more visually identifiable:
 
 ```bash
 docker exec -ti v1 valkey-cli -3
 ```
 
-Create the two users `user1` and `u2` using `ACL SETUSER`, setting the `resetpass` flag so that they cannot be authenticated using passwords stored inside the Valkey instance
+Create the two users `user1` and `u2` using `ACL SETUSER`, setting the `resetpass` flag so that they cannot be authenticated using passwords stored inside the Valkey instance:
 
 ```valkey
 ACL SETUSER user1 on resetpass +@all ~*
 ACL SETUSER u2 on resetpass +@all ~*
 ```
 
-Verify that the users are created
+Verify that the users are created:
 
 ```valkey
 ACL LIST
@@ -92,7 +92,7 @@ With the above configurations, `user1`'s DN will be:
 cn=user1,ou=devops,dc=valkey,dc=io
 ```
 
-Verify that the configuration is working by authenticate as `user1`
+Verify that the configuration is working by authenticate as `user1`:
 
 ```valkey
 AUTH user1 user1@123
@@ -224,13 +224,13 @@ AUTH user1 hello
 (error) WRONGPASS invalid username-password pair or user is disabled.
 ```
 
-And the LDAP error will appear in the Valkey server's log
+And the LDAP error will appear in the Valkey server's log:
 
 ```bash
 docker compose logs -f valkey
 ```
 
-Expected output
+Expected output:
 
 ```log
 1:M 01 Oct 2026 08:24:26.161 * Ready to accept connections tcp
@@ -238,7 +238,25 @@ Expected output
 
 ```
 
-Set the config
+Set the config `ldap.return_auth_errors` to `yes` to get the LDAP error message rather than the default `WRONGPASS`
+
+```valkey
+CONFIG SET ldap.return_auth_errors yes
+```
+
+Authenticate using the wrong password again:
+
+```valkey
+AUTH user1 hello
+```
+
+Expected output:
+
+```plaintext
+(error) ERR error in bind operation: LDAP operation result: rc=49 (invalidCredentials), dn: "", text: ""
+```
+
+**Note**: Setting `ldap.return_auth_errors` to `yes` will stop the authentication chain. See the [Using `valkey-ldap` in a deployment with multiple authentication modules](./multi-auth-modules-demo/README.md) demo for more detail.
 
 ## Step 8: Cleanup
 
